@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Teacher Console (Multiple Questions)</title>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css"
+    />
+    <style>
+      body {
+        background: linear-gradient(135deg, #f0f0f0 0%, #d1d1f5 100%);
+        min-height: 100vh;
+      }
+      .card {
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        border-radius: 8px;
+      }
+      .option-subcard {
+        background: #fafafa;
+        border-radius: 6px;
+        border: 1px solid #ececec;
+        padding: 8px;
+        margin-bottom: 8px;
+      }
+      .navbar-brand {
+        font-weight: bold;
+        font-size: 1.6rem;
+      }
+      .hero-section {
+        background: #fff;
+        padding: 1rem;
+        border-radius: 8px;
+        margin-bottom: 1rem;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      }
+      .fade-in {
+        animation: fadein 0.5s;
+      }
+      @keyframes fadein {
+        from { opacity:0; }
+        to { opacity:1; }
+      }
+    </style>
+  </head>
+  <body class="p-3">
+    <div class="container fade-in">
+      <nav class="navbar navbar-light bg-light rounded mb-4">
+        <span class="navbar-brand mb-0 h1">Teacher Console</span>
+        <span id="sessionCode" class="text-primary"></span>
+      </nav>
+
+      <div class="hero-section">
+        <h2>Welcome!</h2>
+        <p class="mb-0">
+          A unique session is created automatically. Share this link or QR with 
+          your students.
+        </p>
+      </div>
+
+      <div class="row mb-4">
+        <div class="col-md-6 mb-3">
+          <h5>Student Join Link</h5>
+          <a id="studentLink" href="#" target="_blank"></a>
+          <div id="qrcode" class="mt-2"></div>
+        </div>
+        <div class="col-md-6">
+          <h5>Students Joined</h5>
+          <ul id="studentList" class="list-group"></ul>
+        </div>
+      </div>
+
+      <!-- Question input + Start/Next button -->
+      <div class="card mb-3">
+        <div class="card-body">
+          <h4 class="card-title">Question Setup</h4>
+          <div class="form-group">
+            <label for="questionText">Question (Optional):</label>
+            <input
+              type="text"
+              id="questionText"
+              class="form-control"
+              placeholder="(Optional)"
+            />
+          </div>
+          <label>Number of Options:</label>
+          <div class="form-check form-check-inline">
+            <input
+              class="form-check-input"
+              type="radio"
+              name="numOptions"
+              value="2"
+              id="opt2"
+              checked
+            />
+            <label class="form-check-label" for="opt2">2</label>
+          </div>
+          <div class="form-check form-check-inline">
+            <input
+              class="form-check-input"
+              type="radio"
+              name="numOptions"
+              value="3"
+              id="opt3"
+            />
+            <label class="form-check-label" for="opt3">3</label>
+          </div>
+          <div class="form-check form-check-inline">
+            <input
+              class="form-check-input"
+              type="radio"
+              name="numOptions"
+              value="4"
+              id="opt4"
+            />
+            <label class="form-check-label" for="opt4">4</label>
+          </div>
+
+          <button id="startOrNextBtn" class="btn btn-success btn-block mt-3">
+            Start MCQ
+          </button>
+        </div>
+      </div>
+
+      <!-- Next Explanation -->
+      <button id="nextExplanationBtn" class="btn btn-info btn-block mb-3">
+        Next (Explanation)
+      </button>
+
+      <!-- Results area -->
+      <div class="card mb-3">
+        <div class="card-body">
+          <h4 class="card-title">Results</h4>
+          <div id="resultsContainer" class="row"></div>
+        </div>
+      </div>
+
+      <!-- Stop Quiz & Download CSV -->
+      <button
+        id="stopQuizBtn"
+        class="btn btn-danger btn-block mb-2"
+      >
+        Stop Quiz
+      </button>
+
+      <button
+        id="downloadCsvBtn"
+        class="btn btn-primary btn-block"
+        style="display: none;"
+      >
+        Download CSV
+      </button>
+    </div>
+
+    <!-- QRCode library -->
+    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+    <script>
+      let socket;
+      let currentSessionCode = null;
+      let currentStage = "WAITING"; // WAITING | MCQ | EXPLANATION | STOPPED
+      let isFirstQuestion = true;
+
+      // Refs
+      const sessionCodeSpan = document.getElementById("sessionCode");
+      const studentLink = document.getElementById("studentLink");
+      const studentList = document.getElementById("studentList");
+      const questionText = document.getElementById("questionText");
+      const startOrNextBtn = document.getElementById("startOrNextBtn");
+      const nextExplanationBtn = document.getElementById("nextExplanationBtn");
+      const resultsContainer = document.getElementById("resultsContainer");
+      const stopQuizBtn = document.getElementById("stopQuizBtn");
+      const downloadCsvBtn = document.getElementById("downloadCsvBtn");
+
+      function connectWebSocket() {
+        socket = new WebSocket(
+          window.location.origin.replace(/^http/, "ws")
+        );
+
+        socket.addEventListener("open", () => {
+          console.log("Teacher console connected via WebSocket");
+          socket.send(JSON.stringify({ type: "TEACHER_CREATE_SESSION" }));
+        });
+
+        socket.addEventListener("message", (evt) => {
+          const data = JSON.parse(evt.data);
+          switch (data.type) {
+            case "SESSION_CREATED":
+              handleSessionCreated(data.payload.sessionCode);
+              break;
+            case "TEACHER_VIEW_UPDATE":
+              updateTeacherView(data.payload);
+              break;
+            case "CSV_DATA":
+              triggerDownload(data.payload.csv, data.payload.filename);
+              break;
+            case "QUIZ_STOPPED":
+              alert("Quiz has been stopped.");
+              currentStage = "STOPPED";
+              disableAllControls();
+              downloadCsvBtn.style.display = "block";
+              break;
+            case "ERROR":
+              alert(data.payload.message);
+              break;
+          }
+        });
+      }
+
+      function handleSessionCreated(code) {
+        currentSessionCode = code;
+        currentStage = "WAITING";
+        sessionCodeSpan.innerText = "Session Code: " + code;
+
+        const url = window.location.origin + "/?code=" + code;
+        studentLink.href = url;
+        studentLink.innerText = url;
+
+        new QRCode(document.getElementById("qrcode"), {
+          text: url,
+          width: 128,
+          height: 128
+        });
+      }
+
+      function updateTeacherView(payload) {
+        currentStage = payload.stage;
+        currentSessionCode = payload.sessionCode;
+
+        // Separate the joined student list from the MCQ answers
+        updateStudentList(payload.studentNames);
+        buildResultsUI(payload.questionText, payload.mcqOptions, payload.answers);
+
+        if (currentStage === "WAITING") {
+          nextExplanationBtn.disabled = true;
+          stopQuizBtn.disabled = false;
+        } else if (currentStage === "MCQ") {
+          nextExplanationBtn.disabled = false;
+          stopQuizBtn.disabled = false;
+        } else if (currentStage === "EXPLANATION") {
+          nextExplanationBtn.disabled = true;
+          stopQuizBtn.disabled = false;
+        } else if (currentStage === "STOPPED") {
+          disableAllControls();
+        }
+      }
+
+      function updateStudentList(namesArr) {
+        studentList.innerHTML = "";
+        namesArr.forEach((name) => {
+          const li = document.createElement("li");
+          li.className = "list-group-item";
+          li.innerText = name;
+          studentList.appendChild(li);
+        });
+      }
+
+      function buildResultsUI(questionText, mcqOptions, answersArr) {
+        resultsContainer.innerHTML = "";
+        if (mcqOptions < 2) return;
+
+        // Group answers by chosen option
+        const optionBuckets = {};
+        for (let i = 1; i <= mcqOptions; i++) {
+          optionBuckets[i] = [];
+        }
+
+        answersArr.forEach((ans) => {
+          if (ans.mcqAnswer && optionBuckets[ans.mcqAnswer]) {
+            optionBuckets[ans.mcqAnswer].push(ans);
+          }
+        });
+
+        for (let i = 1; i <= mcqOptions; i++) {
+          const col = document.createElement("div");
+          col.className = "col-sm-12 col-md-6 col-lg-4 mb-3";
+
+          const card = document.createElement("div");
+          card.className = "card h-100";
+
+          const body = document.createElement("div");
+          body.className = "card-body";
+
+          const title = document.createElement("h5");
+          title.className = "card-title";
+          title.innerText = "Option " + i;
+          body.appendChild(title);
+
+          optionBuckets[i].forEach((stu) => {
+            const sub = document.createElement("div");
+            sub.className = "option-subcard";
+
+            const boldName = document.createElement("strong");
+            boldName.innerText = stu.username + ": ";
+            sub.appendChild(boldName);
+
+            const expl = document.createElement("span");
+            expl.innerText = stu.explanation || "(No explanation)";
+            sub.appendChild(expl);
+
+            body.appendChild(sub);
+          });
+
+          card.appendChild(body);
+          col.appendChild(card);
+          resultsContainer.appendChild(col);
+        }
+      }
+
+      // Buttons
+      startOrNextBtn.addEventListener("click", () => {
+        if (!currentSessionCode || currentStage === "STOPPED") return;
+
+        const qText = questionText.value.trim();
+        const opts = getSelectedOptions();
+
+        socket.send(
+          JSON.stringify({
+            type: "TEACHER_START_MCQ",
+            payload: {
+              sessionCode: currentSessionCode,
+              questionText: qText,
+              options: opts
+            }
+          })
+        );
+
+        questionText.value = "";
+        if (isFirstQuestion) {
+          isFirstQuestion = false;
+          startOrNextBtn.innerText = "Next Question";
+        }
+      });
+
+      nextExplanationBtn.addEventListener("click", () => {
+        if (!currentSessionCode) return;
+        socket.send(
+          JSON.stringify({
+            type: "TEACHER_NEXT_EXPLANATION",
+            payload: { sessionCode: currentSessionCode }
+          })
+        );
+      });
+
+      stopQuizBtn.addEventListener("click", () => {
+        if (!currentSessionCode) return;
+        socket.send(
+          JSON.stringify({
+            type: "TEACHER_STOP_QUIZ",
+            payload: { sessionCode: currentSessionCode }
+          })
+        );
+      });
+
+      downloadCsvBtn.addEventListener("click", () => {
+        if (!currentSessionCode) return;
+        socket.send(
+          JSON.stringify({
+            type: "TEACHER_DOWNLOAD_CSV",
+            payload: { sessionCode: currentSessionCode }
+          })
+        );
+      });
+
+      function disableAllControls() {
+        startOrNextBtn.disabled = true;
+        nextExplanationBtn.disabled = true;
+        stopQuizBtn.disabled = true;
+      }
+
+      function getSelectedOptions() {
+        if (document.getElementById("opt3").checked) return 3;
+        if (document.getElementById("opt4").checked) return 4;
+        return 2;
+      }
+
+      function triggerDownload(csvString, filename) {
+        const blob = new Blob([csvString], { type: "text/csv" });
+        const url = URL.createObjectURL(blob);
+
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+      }
+
+      window.addEventListener("beforeunload", () => {
+        if (currentSessionCode && currentStage !== "STOPPED") {
+          socket.send(
+            JSON.stringify({
+              type: "TEACHER_CLOSE_PAGE",
+              payload: { sessionCode: currentSessionCode }
+            })
+          );
+        }
+      });
+
+      window.addEventListener("load", connectWebSocket);
+    </script>
+  </body>
+</html>
