@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Student Console</title>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css"
+    />
+    <style>
+      body {
+        background: linear-gradient(120deg, #d4fc79 0%, #96e6a1 100%);
+        min-height: 100vh;
+      }
+      .hero-section {
+        background: #fff;
+        padding: 1.5rem;
+        border-radius: 10px;
+        margin-top: 2rem;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      }
+      .fade-in {
+        animation: fadein 0.6s;
+      }
+      @keyframes fadein {
+        from {opacity:0;}
+        to {opacity:1;}
+      }
+    </style>
+  </head>
+  <body class="p-3">
+    <div class="container fade-in">
+      <div class="hero-section">
+        <h1 class="mb-4">Student Console</h1>
+
+        <!-- Join form -->
+        <div id="joinArea">
+          <div class="form-group">
+            <label for="sessionCodeInput">Session Code:</label>
+            <input
+              type="text"
+              id="sessionCodeInput"
+              class="form-control"
+              placeholder="ABC123"
+            />
+          </div>
+          <div class="form-group">
+            <label for="usernameInput">Your Name:</label>
+            <input
+              type="text"
+              id="usernameInput"
+              class="form-control"
+              placeholder="e.g. Alice"
+            />
+          </div>
+          <button id="joinBtn" class="btn btn-primary btn-block mt-3">
+            Join Session
+          </button>
+        </div>
+
+        <!-- Waiting notice -->
+        <div id="waitingArea" class="mt-4" style="display: none;">
+          <h4>Waiting for quiz to start...</h4>
+        </div>
+
+        <!-- MCQ area -->
+        <div id="mcqArea" class="mt-4" style="display: none;">
+          <h4 id="questionTitle"></h4>
+          <div id="optionsContainer" class="my-3"></div>
+          <button id="submitMcqBtn" class="btn btn-success btn-block">
+            Submit
+          </button>
+          <p
+            id="chosenMsg"
+            class="text-success mt-3"
+            style="display: none;"
+          ></p>
+        </div>
+
+        <!-- Explanation area -->
+        <div id="explanationArea" class="mt-4" style="display: none;">
+          <h4>Explain your reasoning (auto-updates)</h4>
+          <textarea
+            id="explanationInput"
+            class="form-control"
+            rows="3"
+            placeholder="Type your explanation here..."
+          ></textarea>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      let socket;
+      let studentId = null;
+      let sessionCode = null;
+      let selectedOption = null;
+
+      const joinArea = document.getElementById("joinArea");
+      const waitingArea = document.getElementById("waitingArea");
+      const mcqArea = document.getElementById("mcqArea");
+      const questionTitle = document.getElementById("questionTitle");
+      const optionsContainer = document.getElementById("optionsContainer");
+      const chosenMsg = document.getElementById("chosenMsg");
+      const explanationArea = document.getElementById("explanationArea");
+
+      const sessionCodeInput = document.getElementById("sessionCodeInput");
+      const usernameInput = document.getElementById("usernameInput");
+      const joinBtn = document.getElementById("joinBtn");
+      const submitMcqBtn = document.getElementById("submitMcqBtn");
+      const explanationInput = document.getElementById("explanationInput");
+
+      // If ?code=xxx, pre-fill
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.has("code")) {
+        sessionCodeInput.value = urlParams.get("code");
+      }
+
+      function connectWebSocket() {
+        socket = new WebSocket(
+          window.location.origin.replace(/^http/, "ws")
+        );
+
+        socket.addEventListener("open", () => {
+          console.log("Student connected via WebSocket");
+        });
+
+        socket.addEventListener("message", (evt) => {
+          const data = JSON.parse(evt.data);
+          switch (data.type) {
+            case "JOINED_SESSION":
+              studentId = data.payload.studentId;
+              sessionCode = data.payload.sessionCode;
+              handleJoined(data.payload.stage);
+              break;
+            case "MCQ_STARTED":
+              showMcq(data.payload.questionText, data.payload.options);
+              break;
+            case "SHOW_EXPLANATION_INPUT":
+              showExplanation();
+              break;
+            case "QUIZ_STOPPED":
+              alert("Quiz has been stopped by the teacher.");
+              socket.close();
+              location.reload();
+              break;
+            case "ERROR":
+              alert(data.payload.message);
+              break;
+          }
+        });
+      }
+
+      joinBtn.addEventListener("click", () => {
+        const code = sessionCodeInput.value.trim().toUpperCase();
+        const uname = usernameInput.value.trim();
+        if (!code || !uname) {
+          alert("Please enter both session code and your name.");
+          return;
+        }
+        socket.send(
+          JSON.stringify({
+            type: "STUDENT_JOIN_SESSION",
+            payload: {
+              sessionCode: code,
+              username: uname
+            }
+          })
+        );
+      });
+
+      function handleJoined(stage) {
+        joinArea.style.display = "none";
+        if (stage === "WAITING") {
+          waitingArea.style.display = "block";
+        } else if (stage === "MCQ") {
+          // teacher might already be in MCQ stage
+          waitingArea.style.display = "block"; 
+        } else if (stage === "EXPLANATION") {
+          waitingArea.style.display = "none";
+          mcqArea.style.display = "none";
+          explanationArea.style.display = "block";
+        }
+      }
+
+      function showMcq(qText, numOptions) {
+        // Clear old inputs from any previous question
+        explanationInput.value = "";
+
+        waitingArea.style.display = "none";
+        mcqArea.style.display = "block";
+        explanationArea.style.display = "none";
+
+        chosenMsg.style.display = "none";
+        submitMcqBtn.disabled = false;
+        selectedOption = null;
+
+        questionTitle.innerText = qText || "(No question provided)";
+        optionsContainer.innerHTML = "";
+
+        for (let i = 1; i <= numOptions; i++) {
+          const div = document.createElement("div");
+          div.className = "form-check";
+
+          const radio = document.createElement("input");
+          radio.type = "radio";
+          radio.name = "mcqOption";
+          radio.value = i;
+          radio.className = "form-check-input";
+          radio.id = "option" + i;
+
+          radio.addEventListener("change", () => {
+            selectedOption = i;
+          });
+
+          const label = document.createElement("label");
+          label.className = "form-check-label";
+          label.setAttribute("for", "option" + i);
+          label.innerText = "Option " + i;
+
+          div.appendChild(radio);
+          div.appendChild(label);
+          optionsContainer.appendChild(div);
+        }
+      }
+
+      submitMcqBtn.addEventListener("click", () => {
+        if (!selectedOption) {
+          alert("Please select an option first!");
+          return;
+        }
+        socket.send(
+          JSON.stringify({
+            type: "STUDENT_SUBMIT_MCQ",
+            payload: {
+              sessionCode,
+              studentId,
+              answer: selectedOption
+            }
+          })
+        );
+        // lock
+        submitMcqBtn.disabled = true;
+        const radios = optionsContainer.querySelectorAll("input[type=radio]");
+        radios.forEach((r) => (r.disabled = true));
+
+        chosenMsg.innerText = `You chose Option ${selectedOption}. Please wait for the next part.`;
+        chosenMsg.style.display = "block";
+      });
+
+      function showExplanation() {
+        // Clear old explanation from previous question
+        explanationInput.value = "";
+
+        mcqArea.style.display = "none";
+        waitingArea.style.display = "none";
+        explanationArea.style.display = "block";
+      }
+
+      // Real-time explanation
+      explanationInput.addEventListener("input", (e) => {
+        if (!sessionCode || !studentId) return;
+        const text = e.target.value;
+        socket.send(
+          JSON.stringify({
+            type: "STUDENT_EXPLANATION_UPDATE",
+            payload: {
+              sessionCode,
+              studentId,
+              explanation: text
+            }
+          })
+        );
+      });
+
+      window.addEventListener("load", connectWebSocket);
+    </script>
+  </body>
+</html>
