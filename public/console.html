@@ -1,402 +1,1169 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
   <head>
     <meta charset="utf-8" />
-    <title>Teacher Console (Multiple Questions)</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Collaborative MCQ Workspace – Facilitator</title>
     <link
+      rel="preconnect"
+      href="https://fonts.googleapis.com"
+    />
+    <link
+      rel="preconnect"
+      href="https://fonts.gstatic.com"
+      crossorigin
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
       rel="stylesheet"
-      href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css"
     />
     <style>
+      :root {
+        color-scheme: light;
+        --brand: #4b74ff;
+        --brand-accent: #2f4fdb;
+        --bg: #f3f5fd;
+        --panel: rgba(255, 255, 255, 0.85);
+        --panel-solid: #ffffff;
+        --text: #1f2436;
+        --muted: #6f7c99;
+        --muted-strong: #525b74;
+        --success: #1c9c6d;
+        --warning: #f2a100;
+        --danger: #cc3a51;
+        --border-radius: 20px;
+        --shadow: 0 18px 38px rgba(31, 36, 54, 0.12);
+        --shadow-soft: 0 10px 20px rgba(31, 36, 54, 0.08);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
       body {
-        background: linear-gradient(135deg, #f0f0f0 0%, #d1d1f5 100%);
+        margin: 0;
+        font-family: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+        background: radial-gradient(circle at 10% -10%, rgba(75, 116, 255, 0.18), transparent 50%),
+          radial-gradient(circle at 80% 0%, rgba(28, 156, 109, 0.12), transparent 45%),
+          var(--bg);
         min-height: 100vh;
+        padding: 32px 24px 48px;
+        color: var(--text);
       }
-      .card {
-        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-        border-radius: 8px;
+
+      .app-shell {
+        max-width: 1400px;
+        margin: 0 auto;
+        display: grid;
+        gap: 28px;
       }
-      .option-subcard {
-        background: #fafafa;
-        border-radius: 6px;
-        border: 1px solid #ececec;
-        padding: 8px;
-        margin-bottom: 8px;
+
+      header {
+        border-radius: var(--border-radius);
+        padding: 28px 32px;
+        background: var(--panel);
+        backdrop-filter: blur(18px);
+        box-shadow: var(--shadow);
+        display: flex;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 20px;
       }
-      .navbar-brand {
-        font-weight: bold;
-        font-size: 1.6rem;
+
+      .brand-title {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
       }
-      .hero-section {
-        background: #fff;
-        padding: 1rem;
-        border-radius: 8px;
-        margin-bottom: 1rem;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+
+      .brand-title h1 {
+        margin: 0;
+        font-size: 2rem;
+        font-weight: 700;
       }
-      .fade-in {
-        animation: fadein 0.5s;
+
+      .brand-title p {
+        margin: 0;
+        color: var(--muted);
+        max-width: 540px;
       }
-      @keyframes fadein {
-        from { opacity:0; }
-        to { opacity:1; }
+
+      .session-meta {
+        display: flex;
+        align-items: center;
+        gap: 18px;
+        flex-wrap: wrap;
+      }
+
+      .session-code {
+        background: linear-gradient(135deg, rgba(75, 116, 255, 0.16) 0%, rgba(75, 116, 255, 0.04) 100%);
+        border-radius: 16px;
+        padding: 16px 22px;
+        display: flex;
+        flex-direction: column;
+        min-width: 200px;
+      }
+
+      .session-code span {
+        color: var(--muted);
+        font-size: 0.9rem;
+        letter-spacing: 0.08em;
+      }
+
+      .session-code strong {
+        font-size: 1.9rem;
+        letter-spacing: 0.18em;
+        margin-top: 6px;
+      }
+
+      .stage-indicator {
+        border-radius: 999px;
+        padding: 10px 20px;
+        background: rgba(28, 156, 109, 0.12);
+        color: var(--success);
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .layout {
+        display: grid;
+        grid-template-columns: repeat(12, 1fr);
+        gap: 24px;
+      }
+
+      .panel {
+        background: var(--panel-solid);
+        border-radius: var(--border-radius);
+        box-shadow: var(--shadow-soft);
+        padding: 28px;
+        min-height: 280px;
+      }
+
+      .panel h2 {
+        margin-top: 0;
+        font-size: 1.4rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .panel .subtitle {
+        margin-top: 6px;
+        margin-bottom: 24px;
+        color: var(--muted);
+      }
+
+      .panel-session {
+        grid-column: span 4;
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+      }
+
+      .panel-controls {
+        grid-column: span 8;
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+      }
+
+      .panel-results {
+        grid-column: span 12;
+      }
+
+      @media (max-width: 1100px) {
+        .panel-session,
+        .panel-controls {
+          grid-column: span 12;
+        }
+      }
+
+      label {
+        font-weight: 600;
+        display: block;
+        margin-bottom: 10px;
+      }
+
+      input[type="text"],
+      textarea,
+      select {
+        width: 100%;
+        border: 1px solid rgba(31, 36, 54, 0.12);
+        border-radius: 14px;
+        padding: 12px 16px;
+        font-size: 1rem;
+        font-family: inherit;
+        transition: border 0.2s ease, box-shadow 0.2s ease;
+      }
+
+      textarea {
+        min-height: 110px;
+        resize: vertical;
+      }
+
+      input:focus,
+      textarea:focus,
+      select:focus {
+        outline: none;
+        border-color: rgba(75, 116, 255, 0.45);
+        box-shadow: 0 0 0 4px rgba(75, 116, 255, 0.15);
+      }
+
+      button {
+        border: none;
+        border-radius: 14px;
+        padding: 13px 20px;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        font-family: inherit;
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        transition: transform 0.1s ease, box-shadow 0.2s ease, background 0.2s ease;
+      }
+
+      button:disabled {
+        cursor: not-allowed;
+        opacity: 0.6;
+        transform: none;
+        box-shadow: none;
+      }
+
+      .btn-primary {
+        background: linear-gradient(135deg, var(--brand) 0%, var(--brand-accent) 100%);
+        color: #fff;
+        box-shadow: 0 12px 24px rgba(75, 116, 255, 0.24);
+      }
+
+      .btn-secondary {
+        background: rgba(31, 36, 54, 0.06);
+        color: var(--muted-strong);
+      }
+
+      .btn-danger {
+        background: rgba(204, 58, 81, 0.12);
+        color: var(--danger);
+      }
+
+      .btn-primary:hover:not(:disabled) {
+        transform: translateY(-1px);
+      }
+
+      .mode-selector {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+      }
+
+      .mode-button {
+        border: 1px solid rgba(31, 36, 54, 0.12);
+        background: #f9faff;
+        border-radius: 12px;
+        padding: 14px 18px;
+        cursor: pointer;
+        flex: 1 1 180px;
+        text-align: left;
+        transition: border 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
+      }
+
+      .mode-button.active {
+        border-color: rgba(75, 116, 255, 0.6);
+        background: rgba(75, 116, 255, 0.08);
+        box-shadow: 0 10px 18px rgba(75, 116, 255, 0.18);
+      }
+
+      .mode-button strong {
+        display: block;
+        font-size: 1.1rem;
+      }
+
+      .mode-button span {
+        color: var(--muted);
+        font-size: 0.95rem;
+      }
+
+      .range-input {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        flex-wrap: wrap;
+      }
+
+      .range-input input[type="range"] {
+        flex: 1;
+        accent-color: var(--brand);
+      }
+
+      .range-value {
+        background: rgba(75, 116, 255, 0.12);
+        color: var(--brand-accent);
+        padding: 6px 14px;
+        border-radius: 999px;
+        font-weight: 600;
+      }
+
+      .share-card {
+        border: 1px dashed rgba(31, 36, 54, 0.18);
+        border-radius: 16px;
+        padding: 16px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .share-card a {
+        color: var(--brand-accent);
+        word-break: break-word;
+        text-decoration: none;
+      }
+
+      .list {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .list-item {
+        border-radius: 12px;
+        padding: 12px 14px;
+        background: rgba(31, 36, 54, 0.04);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      .results-grid {
+        display: grid;
+        gap: 18px;
+      }
+
+      @media (min-width: 900px) {
+        .results-grid {
+          grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        }
+      }
+
+      .result-card {
+        border-radius: 18px;
+        background: rgba(75, 116, 255, 0.06);
+        padding: 18px 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .progress-track {
+        width: 100%;
+        height: 8px;
+        border-radius: 999px;
+        background: rgba(31, 36, 54, 0.1);
+        overflow: hidden;
+      }
+
+      .progress-bar {
+        height: 100%;
+        border-radius: 999px;
+        background: linear-gradient(135deg, var(--brand) 0%, var(--brand-accent) 100%);
+        transition: width 0.4s ease;
+      }
+
+      .pill {
+        padding: 6px 12px;
+        border-radius: 999px;
+        background: rgba(31, 36, 54, 0.08);
+        font-size: 0.9rem;
+      }
+
+      .explanation-block {
+        border-radius: 14px;
+        padding: 16px;
+        background: rgba(31, 36, 54, 0.04);
+      }
+
+      .timeline {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        display: grid;
+        gap: 12px;
+      }
+
+      .timeline li {
+        border-radius: 14px;
+        background: rgba(31, 36, 54, 0.05);
+        padding: 12px 16px;
+      }
+
+      .flex-between {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 16px;
+        flex-wrap: wrap;
+      }
+
+      .hidden {
+        display: none !important;
+      }
+
+      .toast {
+        position: fixed;
+        bottom: 32px;
+        right: 32px;
+        background: rgba(31, 36, 54, 0.92);
+        color: #fff;
+        padding: 16px 22px;
+        border-radius: 14px;
+        box-shadow: 0 16px 32px rgba(31, 36, 54, 0.22);
+        opacity: 0;
+        transform: translateY(20px);
+        transition: opacity 0.3s ease, transform 0.3s ease;
+        pointer-events: none;
+      }
+
+      .toast.show {
+        opacity: 1;
+        transform: translateY(0);
       }
     </style>
   </head>
-  <body class="p-3">
-    <div class="container fade-in">
-      <nav class="navbar navbar-light bg-light rounded mb-4">
-        <span class="navbar-brand mb-0 h1">Teacher Console</span>
-        <span id="sessionCode" class="text-primary"></span>
-      </nav>
-
-      <div class="hero-section">
-        <h2>Welcome!</h2>
-        <p class="mb-0">
-          A unique session is created automatically. Share this link or QR with 
-          your students.
-        </p>
-      </div>
-
-      <div class="row mb-4">
-        <div class="col-md-6 mb-3">
-          <h5>Student Join Link</h5>
-          <a id="studentLink" href="#" target="_blank"></a>
-          <div id="qrcode" class="mt-2"></div>
+  <body>
+    <div class="app-shell">
+      <header>
+        <div class="brand-title">
+          <h1>Collaborative MCQ Workspace</h1>
+          <p>
+            Craft single-response, multi-response, or multi-tier experiences. Guide learners through selection, grouping, and explanation – all in real time.
+          </p>
         </div>
-        <div class="col-md-6">
-          <h5>Students Joined</h5>
-          <ul id="studentList" class="list-group"></ul>
+        <div class="session-meta">
+          <div class="session-code">
+            <span>SESSION CODE</span>
+            <strong id="sessionCode"></strong>
+          </div>
+          <div class="stage-indicator">
+            <small>Stage</small>
+            <span id="stageChip">Lobby</span>
+          </div>
         </div>
-      </div>
+      </header>
 
-      <!-- Question input + Start/Next button -->
-      <div class="card mb-3">
-        <div class="card-body">
-          <h4 class="card-title">Question Setup</h4>
-          <div class="form-group">
-            <label for="questionText">Question (Optional):</label>
-            <input
-              type="text"
-              id="questionText"
-              class="form-control"
-              placeholder="(Optional)"
-            />
-          </div>
-          <label>Number of Options:</label>
-          <div class="form-check form-check-inline">
-            <input
-              class="form-check-input"
-              type="radio"
-              name="numOptions"
-              value="2"
-              id="opt2"
-              checked
-            />
-            <label class="form-check-label" for="opt2">2</label>
-          </div>
-          <div class="form-check form-check-inline">
-            <input
-              class="form-check-input"
-              type="radio"
-              name="numOptions"
-              value="3"
-              id="opt3"
-            />
-            <label class="form-check-label" for="opt3">3</label>
-          </div>
-          <div class="form-check form-check-inline">
-            <input
-              class="form-check-input"
-              type="radio"
-              name="numOptions"
-              value="4"
-              id="opt4"
-            />
-            <label class="form-check-label" for="opt4">4</label>
+      <div class="layout">
+        <section class="panel panel-session">
+          <h2>Invite Learners</h2>
+          <p class="subtitle">Share the link or QR code so participants can join instantly.</p>
+          <div class="share-card">
+            <strong>Participant Link</strong>
+            <a id="participantLink" href="#" target="_blank" rel="noopener"></a>
+            <div class="flex-between">
+              <div>
+                <span class="muted">QR Code</span>
+              </div>
+              <div id="qrCode" style="width:140px;height:140px;"></div>
+            </div>
           </div>
 
-          <button id="startOrNextBtn" class="btn btn-success btn-block mt-3">
-            Start MCQ
-          </button>
-        </div>
+          <div>
+            <h3 style="margin-bottom:12px;">Participants</h3>
+            <div id="participantList" class="list"></div>
+            <p id="participantEmpty" class="muted" style="margin-top:12px;">Waiting for learners to join.</p>
+          </div>
+
+          <div>
+            <h3 style="margin-bottom:12px;">Completed Questions</h3>
+            <ul id="historyList" class="timeline"></ul>
+            <p id="historyEmpty" class="muted">No questions completed yet.</p>
+          </div>
+        </section>
+
+        <section class="panel panel-controls">
+          <h2>Design the Experience</h2>
+          <p class="subtitle">Choose the interaction style and launch when ready.</p>
+
+          <div>
+            <label>Question prompt</label>
+            <textarea id="questionInput" placeholder="What would you like learners to think about?" maxlength="280"></textarea>
+          </div>
+
+          <div>
+            <label>Interaction type</label>
+            <div class="mode-selector">
+              <button class="mode-button active" data-mode="single">
+                <strong>Single Response</strong>
+                <span>Each learner selects one option.</span>
+              </button>
+              <button class="mode-button" data-mode="multi">
+                <strong>Multi-Response</strong>
+                <span>Allow multiple options per learner.</span>
+              </button>
+              <button class="mode-button" data-mode="multi-tier">
+                <strong>Multi-tier Journey</strong>
+                <span>Choose → Group → Explain for deeper reasoning.</span>
+              </button>
+            </div>
+          </div>
+
+          <div>
+            <label for="optionRange">Number of options</label>
+            <div class="range-input">
+              <input id="optionRange" type="range" min="2" max="7" value="4" />
+              <span id="optionValue" class="range-value">4 options</span>
+            </div>
+          </div>
+
+          <div class="flex-between" style="margin-top:8px;">
+            <div>
+              <p class="muted" id="stageStatus">Ready to launch your first question.</p>
+            </div>
+            <div style="display:flex;gap:12px;flex-wrap:wrap;">
+              <button id="launchButton" class="btn-primary" type="button">Launch Question</button>
+              <button id="advanceButton" class="btn-secondary hidden" type="button">Advance Stage</button>
+              <button id="endSessionButton" class="btn-danger" type="button">End Session</button>
+            </div>
+          </div>
+
+          <div class="flex-between" style="margin-top:18px;">
+            <div>
+              <strong>Data & Export</strong>
+              <p class="muted" style="margin:4px 0 0;">Download a CSV snapshot of every learner response.</p>
+            </div>
+            <button id="downloadButton" class="btn-secondary" type="button" disabled>Download CSV</button>
+          </div>
+        </section>
+
+        <section class="panel panel-results">
+          <div class="flex-between">
+            <h2>Live Insights</h2>
+            <div id="responseChip" class="pill"></div>
+          </div>
+          <p class="subtitle">Monitor engagement in real time, see groupings, and capture explanations.</p>
+
+          <div id="resultsPlaceholder" class="muted" style="margin-top:24px;">Launch a question to start collecting responses.</div>
+          <div id="resultsGrid" class="results-grid"></div>
+          <div id="explanationsContainer" style="margin-top:28px;"></div>
+        </section>
       </div>
-
-      <!-- Next Explanation -->
-      <button id="nextExplanationBtn" class="btn btn-info btn-block mb-3">
-        Next (Explanation)
-      </button>
-
-      <!-- Results area -->
-      <div class="card mb-3">
-        <div class="card-body">
-          <h4 class="card-title">Results</h4>
-          <div id="resultsContainer" class="row"></div>
-        </div>
-      </div>
-
-      <!-- Stop Quiz & Download CSV -->
-      <button
-        id="stopQuizBtn"
-        class="btn btn-danger btn-block mb-2"
-      >
-        Stop Quiz
-      </button>
-
-      <button
-        id="downloadCsvBtn"
-        class="btn btn-primary btn-block"
-        style="display: none;"
-      >
-        Download CSV
-      </button>
     </div>
 
-    <!-- QRCode library -->
+    <div id="toast" class="toast" role="status"></div>
+
+    <script src="/env.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
-    <script>
-      let socket;
-      let currentSessionCode = null;
-      let currentStage = "WAITING"; // WAITING | MCQ | EXPLANATION | STOPPED
-      let isFirstQuestion = true;
+    <script type="module">
+      import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-      // Refs
-      const sessionCodeSpan = document.getElementById("sessionCode");
-      const studentLink = document.getElementById("studentLink");
-      const studentList = document.getElementById("studentList");
-      const questionText = document.getElementById("questionText");
-      const startOrNextBtn = document.getElementById("startOrNextBtn");
-      const nextExplanationBtn = document.getElementById("nextExplanationBtn");
-      const resultsContainer = document.getElementById("resultsContainer");
-      const stopQuizBtn = document.getElementById("stopQuizBtn");
-      const downloadCsvBtn = document.getElementById("downloadCsvBtn");
-
-      function connectWebSocket() {
-        socket = new WebSocket(
-          window.location.origin.replace(/^http/, "ws")
-        );
-
-        socket.addEventListener("open", () => {
-          console.log("Teacher console connected via WebSocket");
-          socket.send(JSON.stringify({ type: "TEACHER_CREATE_SESSION" }));
-        });
-
-        socket.addEventListener("message", (evt) => {
-          const data = JSON.parse(evt.data);
-          switch (data.type) {
-            case "SESSION_CREATED":
-              handleSessionCreated(data.payload.sessionCode);
-              break;
-            case "TEACHER_VIEW_UPDATE":
-              updateTeacherView(data.payload);
-              break;
-            case "CSV_DATA":
-              triggerDownload(data.payload.csv, data.payload.filename);
-              break;
-            case "QUIZ_STOPPED":
-              alert("Quiz has been stopped.");
-              currentStage = "STOPPED";
-              disableAllControls();
-              downloadCsvBtn.style.display = "block";
-              break;
-            case "ERROR":
-              alert(data.payload.message);
-              break;
-          }
-        });
+      const config = window.__SUPABASE_CONFIG__ || {};
+      if (!config.projectUrl || !config.anonKey) {
+        alert("Supabase configuration missing. Please ensure .env is configured with PROJECT_URL and ANON_KEY.");
       }
 
-      function handleSessionCreated(code) {
-        currentSessionCode = code;
-        currentStage = "WAITING";
-        sessionCodeSpan.innerText = "Session Code: " + code;
+      const supabase = config.projectUrl && config.anonKey ? createClient(config.projectUrl, config.anonKey) : null;
 
-        const url = window.location.origin + "/?code=" + code;
-        studentLink.href = url;
-        studentLink.innerText = url;
+      const ui = {
+        sessionCode: document.getElementById("sessionCode"),
+        stageChip: document.getElementById("stageChip"),
+        participantLink: document.getElementById("participantLink"),
+        qrCode: document.getElementById("qrCode"),
+        participantList: document.getElementById("participantList"),
+        participantEmpty: document.getElementById("participantEmpty"),
+        historyList: document.getElementById("historyList"),
+        historyEmpty: document.getElementById("historyEmpty"),
+        questionInput: document.getElementById("questionInput"),
+        modeButtons: document.querySelectorAll(".mode-button"),
+        optionRange: document.getElementById("optionRange"),
+        optionValue: document.getElementById("optionValue"),
+        launchButton: document.getElementById("launchButton"),
+        advanceButton: document.getElementById("advanceButton"),
+        endSessionButton: document.getElementById("endSessionButton"),
+        downloadButton: document.getElementById("downloadButton"),
+        stageStatus: document.getElementById("stageStatus"),
+        responseChip: document.getElementById("responseChip"),
+        resultsGrid: document.getElementById("resultsGrid"),
+        resultsPlaceholder: document.getElementById("resultsPlaceholder"),
+        explanationsContainer: document.getElementById("explanationsContainer"),
+        toast: document.getElementById("toast"),
+      };
 
-        new QRCode(document.getElementById("qrcode"), {
-          text: url,
-          width: 128,
-          height: 128
-        });
+      const state = {
+        teacherId: generateId("teacher"),
+        sessionCode: generateSessionCode(),
+        stage: "LOBBY",
+        selectedMode: "single",
+        optionCount: parseInt(ui.optionRange.value, 10),
+        questionCounter: 0,
+        currentQuestion: null,
+        roster: [],
+        history: [],
+        channel: null,
+        supabaseReady: Boolean(supabase),
+      };
+
+      let qrInstance = null;
+
+      initialiseSessionDisplay();
+
+      if (supabase) {
+        connectToRealtime();
       }
 
-      function updateTeacherView(payload) {
-        currentStage = payload.stage;
-        currentSessionCode = payload.sessionCode;
+      ui.modeButtons.forEach((button) => {
+        button.addEventListener("click", () => selectMode(button.dataset.mode));
+      });
 
-        // Separate the joined student list from the MCQ answers
-        updateStudentList(payload.studentNames);
-        buildResultsUI(payload.questionText, payload.mcqOptions, payload.answers);
+      ui.optionRange.addEventListener("input", () => {
+        state.optionCount = parseInt(ui.optionRange.value, 10);
+        ui.optionValue.textContent = `${state.optionCount} option${state.optionCount === 1 ? "" : "s"}`;
+      });
 
-        if (currentStage === "WAITING") {
-          nextExplanationBtn.disabled = true;
-          stopQuizBtn.disabled = false;
-        } else if (currentStage === "MCQ") {
-          nextExplanationBtn.disabled = false;
-          stopQuizBtn.disabled = false;
-        } else if (currentStage === "EXPLANATION") {
-          nextExplanationBtn.disabled = true;
-          stopQuizBtn.disabled = false;
-        } else if (currentStage === "STOPPED") {
-          disableAllControls();
+      ui.launchButton.addEventListener("click", () => {
+        if (!state.supabaseReady) return;
+        if (state.stage !== "LOBBY" && state.stage !== "SUMMARY") {
+          showToast("Complete the current question before launching a new one.");
+          return;
+        }
+        startQuestion();
+      });
+
+      ui.advanceButton.addEventListener("click", () => {
+        advanceStage();
+      });
+
+      ui.endSessionButton.addEventListener("click", () => {
+        if (!confirm("End this session for everyone?")) return;
+        state.stage = "ENDED";
+        broadcastState();
+        updateInterface();
+      });
+
+      ui.downloadButton.addEventListener("click", () => {
+        if (!state.history.length) {
+          showToast("No completed questions to export yet.");
+          return;
+        }
+        downloadCsv();
+      });
+
+      function initialiseSessionDisplay() {
+        ui.sessionCode.textContent = state.sessionCode;
+        updateParticipantLink();
+        ui.stageChip.textContent = stageLabel(state.stage);
+        ui.optionValue.textContent = `${state.optionCount} options`;
+        ui.responseChip.textContent = "No responses yet";
+
+        if (window.QRCode) {
+          qrInstance = new QRCode(ui.qrCode, {
+            text: participantUrl(),
+            width: 140,
+            height: 140,
+          });
         }
       }
 
-      function updateStudentList(namesArr) {
-        studentList.innerHTML = "";
-        namesArr.forEach((name) => {
-          const li = document.createElement("li");
-          li.className = "list-group-item";
-          li.innerText = name;
-          studentList.appendChild(li);
-        });
+      function updateParticipantLink() {
+        const url = participantUrl();
+        ui.participantLink.href = url;
+        ui.participantLink.textContent = url;
+        if (qrInstance) {
+          ui.qrCode.innerHTML = "";
+          qrInstance = new QRCode(ui.qrCode, {
+            text: url,
+            width: 140,
+            height: 140,
+          });
+        }
       }
 
-      function buildResultsUI(questionText, mcqOptions, answersArr) {
-        resultsContainer.innerHTML = "";
-        if (mcqOptions < 2) return;
+      function participantUrl() {
+        return `${window.location.origin}/?code=${state.sessionCode}`;
+      }
 
-        // Group answers by chosen option
-        const optionBuckets = {};
-        for (let i = 1; i <= mcqOptions; i++) {
-          optionBuckets[i] = [];
-        }
+      async function connectToRealtime() {
+        const channelName = `session-${state.sessionCode}`;
+        state.channel = supabase.channel(channelName, {
+          config: {
+            broadcast: { ack: true, self: false },
+            presence: { key: state.teacherId },
+          },
+        });
 
-        answersArr.forEach((ans) => {
-          if (ans.mcqAnswer && optionBuckets[ans.mcqAnswer]) {
-            optionBuckets[ans.mcqAnswer].push(ans);
+        state.channel.on("broadcast", { event: "CHOICE_SUBMIT" }, ({ payload }) => {
+          if (!state.currentQuestion || !payload) return;
+          if (state.stage === "SUMMARY" || state.stage === "ENDED") return;
+          registerChoice(payload);
+        });
+
+        state.channel.on("broadcast", { event: "EXPLANATION_UPDATE" }, ({ payload }) => {
+          if (!state.currentQuestion || !payload) return;
+          if (state.currentQuestion.mode !== "multi-tier") return;
+          if (state.stage !== "EXPLANATION" && state.stage !== "SUMMARY") return;
+          registerExplanation(payload);
+        });
+
+        state.channel.on("presence", { event: "sync" }, () => {
+          updateRosterFromPresence();
+        });
+
+        const { error } = await state.channel.subscribe(async (status) => {
+          if (status === "SUBSCRIBED") {
+            await state.channel.track({
+              role: "teacher",
+              name: "Facilitator",
+              teacherId: state.teacherId,
+            });
+            broadcastState();
+            showToast("Session ready. Share the code to begin.");
           }
         });
 
-        for (let i = 1; i <= mcqOptions; i++) {
-          const col = document.createElement("div");
-          col.className = "col-sm-12 col-md-6 col-lg-4 mb-3";
+        if (error) {
+          console.error("Realtime connection error", error);
+          showToast("Unable to connect to Supabase Realtime.");
+        }
+      }
 
+      function startQuestion() {
+        state.questionCounter += 1;
+        state.currentQuestion = {
+          questionNumber: state.questionCounter,
+          questionText: ui.questionInput.value.trim(),
+          mode: state.selectedMode,
+          optionCount: state.optionCount,
+          responses: {},
+        };
+        state.stage = "CHOICE";
+        ui.questionInput.value = "";
+        ui.stageStatus.textContent = "Learners can now respond.";
+        broadcastState();
+        updateInterface();
+      }
+
+      function advanceStage() {
+        if (!state.currentQuestion) return;
+
+        if (state.currentQuestion.mode === "multi-tier") {
+          if (state.stage === "CHOICE") {
+            state.stage = "GROUP";
+            ui.stageStatus.textContent = "Learners are viewing their groups.";
+          } else if (state.stage === "GROUP") {
+            state.stage = "EXPLANATION";
+            ui.stageStatus.textContent = "Learners are sharing their reasoning.";
+          } else if (state.stage === "EXPLANATION") {
+            finishQuestion();
+          }
+        } else {
+          finishQuestion();
+        }
+
+        broadcastState();
+        updateInterface();
+      }
+
+      function finishQuestion() {
+        if (!state.currentQuestion) return;
+        state.stage = "SUMMARY";
+        ui.stageStatus.textContent = "Review the outcomes or launch another question.";
+        storeHistorySnapshot();
+        ui.downloadButton.disabled = state.history.length === 0;
+      }
+
+      function registerChoice(payload) {
+        const { studentId, name, choices } = payload;
+        if (!studentId || !Array.isArray(choices)) return;
+
+        const validChoices = Array.from(new Set(choices.map((c) => parseInt(c, 10))))
+          .filter((num) => Number.isFinite(num) && num >= 1 && num <= state.currentQuestion.optionCount)
+          .sort((a, b) => a - b);
+
+        if (!validChoices.length) return;
+
+        const responses = state.currentQuestion.responses;
+        if (!responses[studentId]) {
+          responses[studentId] = {
+            name,
+            choices: [],
+            explanation: "",
+          };
+        }
+
+        if (state.currentQuestion.mode !== "multi") {
+          responses[studentId].choices = validChoices.slice(0, 1);
+        } else {
+          responses[studentId].choices = validChoices;
+        }
+
+        updateInterface();
+        broadcastState();
+      }
+
+      function registerExplanation(payload) {
+        const { studentId, name, explanation } = payload;
+        if (!studentId) return;
+
+        const responses = state.currentQuestion.responses;
+        if (!responses[studentId]) {
+          responses[studentId] = {
+            name,
+            choices: [],
+            explanation: explanation || "",
+          };
+        } else {
+          responses[studentId].explanation = explanation || "";
+          if (name) {
+            responses[studentId].name = name;
+          }
+        }
+
+        updateInterface();
+        broadcastState();
+      }
+
+      function updateRosterFromPresence() {
+        if (!state.channel) return;
+        const presenceState = state.channel.presenceState();
+        const roster = [];
+
+        Object.values(presenceState).forEach((entries) => {
+          entries.forEach((entry) => {
+            if (entry.role === "student") {
+              roster.push({
+                name: entry.name,
+                studentId: entry.studentId,
+              });
+            }
+          });
+        });
+
+        state.roster = roster.sort((a, b) => a.name.localeCompare(b.name));
+        updateInterface();
+        broadcastState();
+      }
+
+      function selectMode(mode) {
+        state.selectedMode = mode;
+        ui.modeButtons.forEach((button) => {
+          button.classList.toggle("active", button.dataset.mode === mode);
+        });
+      }
+
+      function storeHistorySnapshot() {
+        if (!state.currentQuestion) return;
+        const snapshot = JSON.parse(JSON.stringify(state.currentQuestion));
+        state.history = state.history.filter((item) => item.questionNumber !== snapshot.questionNumber);
+        state.history.push({
+          ...snapshot,
+          completedAt: new Date().toISOString(),
+        });
+        renderHistory();
+      }
+
+      function renderHistory() {
+        ui.historyList.innerHTML = "";
+        if (!state.history.length) {
+          ui.historyEmpty.classList.remove("hidden");
+          return;
+        }
+        ui.historyEmpty.classList.add("hidden");
+
+        state.history
+          .slice()
+          .sort((a, b) => a.questionNumber - b.questionNumber)
+          .forEach((item) => {
+            const li = document.createElement("li");
+            li.innerHTML = `<strong>Q${item.questionNumber}</strong> · ${item.questionText || "Untitled"} <span class="muted" style="display:block;margin-top:4px;">${modeLabel(item.mode)} · ${item.optionCount} options</span>`;
+            ui.historyList.appendChild(li);
+          });
+      }
+
+      function updateInterface() {
+        ui.sessionCode.textContent = state.sessionCode;
+        ui.stageChip.textContent = stageLabel(state.stage, state.currentQuestion?.mode);
+        updateParticipantLink();
+        renderParticipants();
+        renderResults();
+        renderHistory();
+
+        const responses = state.currentQuestion?.responses || {};
+        const respondedCount = Object.values(responses).filter((entry) => entry.choices && entry.choices.length).length;
+        const total = state.roster.length;
+        ui.responseChip.textContent = total ? `${respondedCount}/${total} responded` : "Awaiting participants";
+
+        if (state.stage === "LOBBY") {
+          ui.stageStatus.textContent = "Ready to launch your first question.";
+        }
+
+        const activeQuestion = Boolean(state.currentQuestion);
+        ui.launchButton.disabled = activeQuestion && state.stage !== "SUMMARY";
+        ui.advanceButton.classList.toggle("hidden", !activeQuestion || state.stage === "SUMMARY" || state.stage === "ENDED");
+        ui.advanceButton.textContent = advanceButtonLabel();
+        ui.downloadButton.disabled = !state.history.length;
+      }
+
+      function renderParticipants() {
+        ui.participantList.innerHTML = "";
+        if (!state.roster.length) {
+          ui.participantEmpty.classList.remove("hidden");
+          return;
+        }
+        ui.participantEmpty.classList.add("hidden");
+
+        state.roster.forEach((participant) => {
+          const item = document.createElement("div");
+          item.className = "list-item";
+          item.innerHTML = `<span>${participant.name}</span>`;
+          ui.participantList.appendChild(item);
+        });
+      }
+
+      function renderResults() {
+        const question = state.currentQuestion;
+        if (!question) {
+          ui.resultsGrid.innerHTML = "";
+          ui.resultsPlaceholder.classList.remove("hidden");
+          ui.explanationsContainer.innerHTML = "";
+          return;
+        }
+
+        ui.resultsPlaceholder.classList.add("hidden");
+        ui.resultsGrid.innerHTML = "";
+
+        const snapshot = buildProgressSnapshot({ includeNamesDuringChoice: true });
+        const counts = snapshot.counts;
+        const total = Math.max(1, counts.reduce((sum, value) => sum + value, 0));
+
+        counts.forEach((count, index) => {
           const card = document.createElement("div");
-          card.className = "card h-100";
+          card.className = "result-card";
+          card.innerHTML = `<div class="flex-between"><strong>Option ${index + 1}</strong><span class="muted">${count} response${count === 1 ? "" : "s"}</span></div>`;
 
-          const body = document.createElement("div");
-          body.className = "card-body";
+          const progressTrack = document.createElement("div");
+          progressTrack.className = "progress-track";
+          const bar = document.createElement("div");
+          bar.className = "progress-bar";
+          bar.style.width = `${Math.round((count / total) * 100)}%`;
+          progressTrack.appendChild(bar);
+          card.appendChild(progressTrack);
 
-          const title = document.createElement("h5");
-          title.className = "card-title";
-          title.innerText = "Option " + i;
-          body.appendChild(title);
+          if (snapshot.groups && snapshot.groups[index].members.length) {
+            const groupWrap = document.createElement("div");
+            groupWrap.style.display = "flex";
+            groupWrap.style.flexWrap = "wrap";
+            groupWrap.style.gap = "8px";
+            snapshot.groups[index].members.forEach((member) => {
+              const pill = document.createElement("span");
+              pill.className = "pill";
+              pill.textContent = member.name;
+              groupWrap.appendChild(pill);
+            });
+            card.appendChild(groupWrap);
+          }
 
-          optionBuckets[i].forEach((stu) => {
-            const sub = document.createElement("div");
-            sub.className = "option-subcard";
+          ui.resultsGrid.appendChild(card);
+        });
 
-            const boldName = document.createElement("strong");
-            boldName.innerText = stu.username + ": ";
-            sub.appendChild(boldName);
+        ui.explanationsContainer.innerHTML = "";
+        if (question.mode === "multi-tier" && snapshot.explanations.length) {
+          const title = document.createElement("h3");
+          title.textContent = "Learner Explanations";
+          ui.explanationsContainer.appendChild(title);
 
-            const expl = document.createElement("span");
-            expl.innerText = stu.explanation || "(No explanation)";
-            sub.appendChild(expl);
+          snapshot.explanations.forEach((item) => {
+            const block = document.createElement("div");
+            block.className = "explanation-block";
+            block.innerHTML = `<strong>${item.name}</strong> · Option ${item.option || "–"}<p class="muted" style="margin-top:6px;white-space:pre-wrap;">${item.explanation || "(No explanation yet)"}</p>`;
+            ui.explanationsContainer.appendChild(block);
+          });
+        }
+      }
 
-            body.appendChild(sub);
+      function buildProgressSnapshot(options = {}) {
+        const includeNamesDuringChoice = Boolean(options.includeNamesDuringChoice);
+        const question = state.currentQuestion;
+        if (!question) {
+          return {
+            counts: [],
+            groups: null,
+            explanations: [],
+            submissions: {},
+          };
+        }
+
+        const counts = Array.from({ length: question.optionCount }, () => 0);
+        const groups = Array.from({ length: question.optionCount }, (_, index) => ({ option: index + 1, members: [] }));
+        const submissions = {};
+        const explanations = [];
+
+        Object.entries(question.responses).forEach(([studentId, entry]) => {
+          const choices = Array.from(new Set((entry.choices || []).map((num) => parseInt(num, 10)))).filter(
+            (num) => Number.isFinite(num) && num >= 1 && num <= question.optionCount,
+          );
+
+          if (!choices.length) return;
+
+          choices.forEach((choice) => {
+            counts[choice - 1] += 1;
+            if (question.mode === "multi-tier" && (includeNamesDuringChoice || state.stage !== "CHOICE")) {
+              groups[choice - 1].members.push({ studentId, name: entry.name || "Learner" });
+            }
           });
 
-          card.appendChild(body);
-          col.appendChild(card);
-          resultsContainer.appendChild(col);
+          submissions[studentId] = {
+            choices,
+            explanation: entry.explanation || "",
+          };
+
+          if (entry.name && (includeNamesDuringChoice || state.stage !== "CHOICE")) {
+            submissions[studentId].name = entry.name;
+          }
+
+          if (question.mode === "multi-tier" && entry.explanation && (state.stage === "EXPLANATION" || state.stage === "SUMMARY")) {
+            explanations.push({
+              studentId,
+              name: entry.name || "Learner",
+              option: choices[0] || null,
+              explanation: entry.explanation,
+            });
+          }
+        });
+
+        return {
+          counts,
+          groups: question.mode === "multi-tier" && (includeNamesDuringChoice || state.stage !== "CHOICE") ? groups : null,
+          explanations,
+          submissions,
+        };
+      }
+
+      function broadcastState() {
+        if (!state.channel) return;
+        const payload = {
+          sessionCode: state.sessionCode,
+          stage: state.stage,
+          roster: state.roster,
+          question: state.currentQuestion
+            ? {
+                number: state.currentQuestion.questionNumber,
+                text: state.currentQuestion.questionText,
+                mode: state.currentQuestion.mode,
+                optionCount: state.currentQuestion.optionCount,
+              }
+            : null,
+          progress: buildProgressSnapshot(),
+        };
+
+        state.channel.send({ type: "broadcast", event: "STATE_SYNC", payload }).catch((error) => {
+          console.error("Broadcast error", error);
+        });
+
+        if (state.stage === "ENDED") {
+          state.channel.send({
+            type: "broadcast",
+            event: "SESSION_ENDED",
+            payload: { message: "The facilitator has concluded the session." },
+          });
         }
       }
 
-      // Buttons
-      startOrNextBtn.addEventListener("click", () => {
-        if (!currentSessionCode || currentStage === "STOPPED") return;
-
-        const qText = questionText.value.trim();
-        const opts = getSelectedOptions();
-
-        socket.send(
-          JSON.stringify({
-            type: "TEACHER_START_MCQ",
-            payload: {
-              sessionCode: currentSessionCode,
-              questionText: qText,
-              options: opts
-            }
-          })
-        );
-
-        questionText.value = "";
-        if (isFirstQuestion) {
-          isFirstQuestion = false;
-          startOrNextBtn.innerText = "Next Question";
+      function advanceButtonLabel() {
+        if (!state.currentQuestion) return "Advance";
+        if (state.currentQuestion.mode === "multi-tier") {
+          if (state.stage === "CHOICE") return "Move to Grouping";
+          if (state.stage === "GROUP") return "Open Explanations";
+          if (state.stage === "EXPLANATION") return "Show Summary";
         }
-      });
-
-      nextExplanationBtn.addEventListener("click", () => {
-        if (!currentSessionCode) return;
-        socket.send(
-          JSON.stringify({
-            type: "TEACHER_NEXT_EXPLANATION",
-            payload: { sessionCode: currentSessionCode }
-          })
-        );
-      });
-
-      stopQuizBtn.addEventListener("click", () => {
-        if (!currentSessionCode) return;
-        socket.send(
-          JSON.stringify({
-            type: "TEACHER_STOP_QUIZ",
-            payload: { sessionCode: currentSessionCode }
-          })
-        );
-      });
-
-      downloadCsvBtn.addEventListener("click", () => {
-        if (!currentSessionCode) return;
-        socket.send(
-          JSON.stringify({
-            type: "TEACHER_DOWNLOAD_CSV",
-            payload: { sessionCode: currentSessionCode }
-          })
-        );
-      });
-
-      function disableAllControls() {
-        startOrNextBtn.disabled = true;
-        nextExplanationBtn.disabled = true;
-        stopQuizBtn.disabled = true;
+        if (state.stage === "CHOICE") return "Show Summary";
+        return "Advance";
       }
 
-      function getSelectedOptions() {
-        if (document.getElementById("opt3").checked) return 3;
-        if (document.getElementById("opt4").checked) return 4;
-        return 2;
+      function stageLabel(stage, mode) {
+        switch (stage) {
+          case "CHOICE":
+            return mode === "multi-tier" ? "Select" : "Respond";
+          case "GROUP":
+            return "Group";
+          case "EXPLANATION":
+            return "Explain";
+          case "SUMMARY":
+            return "Summary";
+          case "ENDED":
+            return "Session Ended";
+          default:
+            return "Lobby";
+        }
       }
 
-      function triggerDownload(csvString, filename) {
-        const blob = new Blob([csvString], { type: "text/csv" });
+      function modeLabel(mode) {
+        switch (mode) {
+          case "single":
+            return "Single response";
+          case "multi":
+            return "Multi-response";
+          case "multi-tier":
+            return "Multi-tier";
+          default:
+            return "";
+        }
+      }
+
+      function showToast(message) {
+        if (!message) return;
+        ui.toast.textContent = message;
+        ui.toast.classList.add("show");
+        setTimeout(() => ui.toast.classList.remove("show"), 2600);
+      }
+
+      function downloadCsv() {
+        const rows = [["Question #", "Question Text", "Mode", "Student", "Choices", "Explanation"]];
+
+        state.history.forEach((question) => {
+          Object.values(question.responses || {}).forEach((response) => {
+            rows.push([
+              question.questionNumber,
+              question.questionText || "",
+              modeLabel(question.mode),
+              response.name || "",
+              (response.choices || []).map((c) => `Option ${c}`).join("; "),
+              response.explanation || "",
+            ]);
+          });
+        });
+
+        const csv = rows
+          .map((row) => row.map((value) => `"${String(value).replace(/"/g, '""')}"`).join(","))
+          .join("\n");
+
+        const blob = new Blob([csv], { type: "text/csv" });
         const url = URL.createObjectURL(blob);
-
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = filename;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
+        const link = document.createElement("a");
+        const timestamp = new Date().toISOString().replace(/[:T]/g, "-").split(".")[0];
+        link.href = url;
+        link.download = `mcq_session_${state.sessionCode}_${timestamp}.csv`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+        showToast("CSV downloaded.");
       }
 
-      window.addEventListener("beforeunload", () => {
-        if (currentSessionCode && currentStage !== "STOPPED") {
-          socket.send(
-            JSON.stringify({
-              type: "TEACHER_CLOSE_PAGE",
-              payload: { sessionCode: currentSessionCode }
-            })
-          );
+      function generateSessionCode() {
+        const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+        let result = "";
+        for (let i = 0; i < 6; i++) {
+          result += chars[Math.floor(Math.random() * chars.length)];
         }
-      });
+        return result;
+      }
 
-      window.addEventListener("load", connectWebSocket);
+      function generateId(prefix) {
+        if (typeof crypto !== "undefined" && crypto.randomUUID) {
+          return `${prefix}-${crypto.randomUUID()}`;
+        }
+        return `${prefix}-${Math.random().toString(16).slice(2)}${Date.now()}`;
+      }
     </script>
   </body>
 </html>
