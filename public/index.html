@@ -1,279 +1,937 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
   <head>
     <meta charset="utf-8" />
-    <title>Student Console</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Collaborative MCQ Workspace – Student</title>
     <link
+      rel="preconnect"
+      href="https://fonts.googleapis.com"
+    />
+    <link
+      rel="preconnect"
+      href="https://fonts.gstatic.com"
+      crossorigin
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
       rel="stylesheet"
-      href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css"
     />
     <style>
+      :root {
+        color-scheme: light;
+        --brand: #4b74ff;
+        --brand-accent: #2f4fdb;
+        --bg: #f5f7fb;
+        --card: #ffffff;
+        --text: #21263c;
+        --muted: #6e7591;
+        --success: #1c9c6d;
+        --danger: #cc3a51;
+        --border-radius: 18px;
+        --shadow: 0 16px 40px rgba(29, 49, 85, 0.08);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
       body {
-        background: linear-gradient(120deg, #d4fc79 0%, #96e6a1 100%);
+        margin: 0;
+        font-family: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+        background: radial-gradient(circle at 20% 20%, rgba(75, 116, 255, 0.14), transparent 55%),
+          radial-gradient(circle at 80% 0%, rgba(28, 156, 109, 0.12), transparent 45%),
+          var(--bg);
+        color: var(--text);
         min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 32px 16px;
       }
-      .hero-section {
-        background: #fff;
-        padding: 1.5rem;
-        border-radius: 10px;
-        margin-top: 2rem;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+
+      .app-shell {
+        width: min(1080px, 100%);
+        display: grid;
+        gap: 24px;
       }
-      .fade-in {
-        animation: fadein 0.6s;
+
+      header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: rgba(255, 255, 255, 0.75);
+        backdrop-filter: blur(20px);
+        border-radius: var(--border-radius);
+        padding: 20px 28px;
+        box-shadow: var(--shadow);
       }
-      @keyframes fadein {
-        from {opacity:0;}
-        to {opacity:1;}
+
+      header .title-group h1 {
+        margin: 0;
+        font-size: 1.6rem;
+        font-weight: 700;
+      }
+
+      header .title-group p {
+        margin: 4px 0 0;
+        color: var(--muted);
+      }
+
+      header .stage-chip {
+        padding: 10px 18px;
+        border-radius: 999px;
+        font-weight: 600;
+        background: rgba(75, 116, 255, 0.12);
+        color: var(--brand-accent);
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      header .stage-chip span {
+        font-size: 1.1rem;
+      }
+
+      .card {
+        background: var(--card);
+        border-radius: var(--border-radius);
+        padding: 28px;
+        box-shadow: var(--shadow);
+      }
+
+      .card h2 {
+        margin-top: 0;
+        font-size: 1.4rem;
+        margin-bottom: 8px;
+      }
+
+      .card p.subtitle {
+        margin-top: 0;
+        margin-bottom: 24px;
+        color: var(--muted);
+      }
+
+      .grid-two {
+        display: grid;
+        gap: 24px;
+      }
+
+      @media (min-width: 900px) {
+        .grid-two {
+          grid-template-columns: 3fr 2fr;
+        }
+      }
+
+      label {
+        font-weight: 600;
+        display: block;
+        margin-bottom: 8px;
+      }
+
+      input[type="text"],
+      textarea {
+        width: 100%;
+        border-radius: 12px;
+        border: 1px solid rgba(33, 38, 60, 0.12);
+        padding: 12px 16px;
+        font-size: 1rem;
+        font-family: inherit;
+        transition: border 0.2s ease, box-shadow 0.2s ease;
+      }
+
+      input[type="text"]:focus,
+      textarea:focus {
+        outline: none;
+        border-color: rgba(75, 116, 255, 0.45);
+        box-shadow: 0 0 0 4px rgba(75, 116, 255, 0.15);
+      }
+
+      textarea {
+        resize: vertical;
+        min-height: 120px;
+      }
+
+      button {
+        border: none;
+        border-radius: 12px;
+        font-size: 1rem;
+        font-weight: 600;
+        padding: 12px 20px;
+        cursor: pointer;
+        transition: transform 0.1s ease, box-shadow 0.2s ease, background 0.2s ease;
+        font-family: inherit;
+      }
+
+      button.primary {
+        background: linear-gradient(135deg, var(--brand) 0%, var(--brand-accent) 100%);
+        color: #fff;
+        box-shadow: 0 12px 24px rgba(75, 116, 255, 0.24);
+      }
+
+      button.primary:disabled {
+        cursor: not-allowed;
+        opacity: 0.6;
+        box-shadow: none;
+      }
+
+      button.secondary {
+        background: rgba(33, 38, 60, 0.06);
+        color: var(--text);
+      }
+
+      button:hover:not(:disabled) {
+        transform: translateY(-1px);
+      }
+
+      .hidden {
+        display: none !important;
+      }
+
+      .status-banner {
+        border-radius: 12px;
+        padding: 14px 16px;
+        background: rgba(75, 116, 255, 0.12);
+        color: var(--brand-accent);
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .status-banner.error {
+        background: rgba(204, 58, 81, 0.12);
+        color: var(--danger);
+      }
+
+      .status-banner.success {
+        background: rgba(28, 156, 109, 0.12);
+        color: var(--success);
+      }
+
+      .option-list {
+        display: grid;
+        gap: 12px;
+        margin-top: 16px;
+      }
+
+      .option-tile {
+        border: 1px solid rgba(33, 38, 60, 0.12);
+        border-radius: 14px;
+        padding: 16px 18px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        transition: border 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
+      }
+
+      .option-tile input {
+        width: 20px;
+        height: 20px;
+      }
+
+      .option-tile.selected {
+        border-color: rgba(75, 116, 255, 0.6);
+        background: rgba(75, 116, 255, 0.08);
+        box-shadow: 0 8px 18px rgba(75, 116, 255, 0.18);
+      }
+
+      .sub-card {
+        border: 1px solid rgba(33, 38, 60, 0.08);
+        border-radius: 12px;
+        padding: 16px;
+        background: rgba(255, 255, 255, 0.72);
+      }
+
+      .group-members {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 12px;
+      }
+
+      .pill {
+        padding: 6px 12px;
+        border-radius: 999px;
+        background: rgba(33, 38, 60, 0.08);
+        font-size: 0.9rem;
+      }
+
+      .summary-grid {
+        display: grid;
+        gap: 16px;
+      }
+
+      @media (min-width: 768px) {
+        .summary-grid {
+          grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        }
+      }
+
+      .progress-track {
+        width: 100%;
+        height: 8px;
+        border-radius: 999px;
+        background: rgba(33, 38, 60, 0.08);
+        overflow: hidden;
+        margin-top: 8px;
+      }
+
+      .progress-bar {
+        height: 100%;
+        border-radius: 999px;
+        background: linear-gradient(135deg, var(--brand) 0%, var(--brand-accent) 100%);
+        transition: width 0.4s ease;
+      }
+
+      .muted {
+        color: var(--muted);
+        font-size: 0.95rem;
+      }
+
+      ul.roster {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      ul.roster li {
+        background: rgba(33, 38, 60, 0.08);
+        padding: 6px 12px;
+        border-radius: 999px;
+        font-size: 0.9rem;
       }
     </style>
   </head>
-  <body class="p-3">
-    <div class="container fade-in">
-      <div class="hero-section">
-        <h1 class="mb-4">Student Console</h1>
+  <body>
+    <div class="app-shell">
+      <header>
+        <div class="title-group">
+          <h1>Collaborative MCQ Workspace</h1>
+          <p>Join the live session, respond, discuss, and explain with your peers.</p>
+        </div>
+        <div class="stage-chip">
+          <small>Stage</small>
+          <span id="stageLabel">Lobby</span>
+        </div>
+      </header>
 
-        <!-- Join form -->
-        <div id="joinArea">
+      <div class="grid-two">
+        <section id="joinCard" class="card">
+          <h2>Join a Session</h2>
+          <p class="subtitle">
+            Enter the session code provided by your facilitator and let us know your name.
+          </p>
           <div class="form-group">
-            <label for="sessionCodeInput">Session Code:</label>
+            <label for="codeInput">Session Code</label>
             <input
+              id="codeInput"
               type="text"
-              id="sessionCodeInput"
-              class="form-control"
               placeholder="ABC123"
+              autocomplete="off"
+              maxlength="12"
             />
           </div>
           <div class="form-group">
-            <label for="usernameInput">Your Name:</label>
+            <label for="nameInput">Your Name</label>
             <input
+              id="nameInput"
               type="text"
-              id="usernameInput"
-              class="form-control"
-              placeholder="e.g. Alice"
+              placeholder="e.g. Taylor"
+              autocomplete="name"
             />
           </div>
-          <button id="joinBtn" class="btn btn-primary btn-block mt-3">
-            Join Session
-          </button>
-        </div>
+          <button id="joinButton" class="primary" type="button">Join Session</button>
+          <div id="joinFeedback" class="status-banner hidden" role="status"></div>
+        </section>
 
-        <!-- Waiting notice -->
-        <div id="waitingArea" class="mt-4" style="display: none;">
-          <h4>Waiting for quiz to start...</h4>
-        </div>
-
-        <!-- MCQ area -->
-        <div id="mcqArea" class="mt-4" style="display: none;">
-          <h4 id="questionTitle"></h4>
-          <div id="optionsContainer" class="my-3"></div>
-          <button id="submitMcqBtn" class="btn btn-success btn-block">
-            Submit
-          </button>
-          <p
-            id="chosenMsg"
-            class="text-success mt-3"
-            style="display: none;"
-          ></p>
-        </div>
-
-        <!-- Explanation area -->
-        <div id="explanationArea" class="mt-4" style="display: none;">
-          <h4>Explain your reasoning (auto-updates)</h4>
-          <textarea
-            id="explanationInput"
-            class="form-control"
-            rows="3"
-            placeholder="Type your explanation here..."
-          ></textarea>
-        </div>
+        <section id="statusCard" class="card hidden">
+          <h2>Live Session Details</h2>
+          <p class="subtitle">Stay in sync with the facilitator and your peers.</p>
+          <div class="sub-card">
+            <strong>Session Code:</strong>
+            <div id="sessionCodeDisplay" style="font-size:1.4rem;font-weight:700;margin-top:4px;letter-spacing:0.08em;"></div>
+          </div>
+          <div class="sub-card" style="margin-top:16px;">
+            <strong>Participants</strong>
+            <ul id="rosterList" class="roster" style="margin-top:12px;"></ul>
+            <p id="rosterEmpty" class="muted" style="margin-top:12px;">You're the first one here—welcome!</p>
+          </div>
+          <div id="statusBanner" class="status-banner" style="margin-top:16px;">
+            Waiting for the facilitator to launch a question…
+          </div>
+        </section>
       </div>
+
+      <section id="experienceCard" class="card hidden">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap;">
+          <div>
+            <h2 id="questionHeading">Awaiting the next question…</h2>
+            <p id="questionMeta" class="muted" style="margin-top:4px;"></p>
+          </div>
+          <div id="responseSummary" class="sub-card hidden" style="min-width:220px;">
+            <strong>Response Progress</strong>
+            <p id="responseStats" class="muted" style="margin:8px 0 0;"></p>
+          </div>
+        </div>
+
+        <div id="choiceArea" class="sub-card" style="margin-top:24px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;">
+            <div>
+              <strong id="choiceTitle">Select your option(s)</strong>
+              <p id="choiceHint" class="muted" style="margin-top:4px;">Make your selection and submit when ready.</p>
+            </div>
+            <button id="submitChoice" class="primary" type="button">Submit</button>
+          </div>
+          <div id="optionsContainer" class="option-list"></div>
+          <p id="choiceFeedback" class="muted" style="margin-top:12px;"></p>
+        </div>
+
+        <div id="groupArea" class="sub-card hidden" style="margin-top:24px;">
+          <strong>Your Discussion Group</strong>
+          <p id="groupDescription" class="muted" style="margin-top:6px;"></p>
+          <div id="groupMembers" class="group-members" style="margin-top:14px;"></div>
+        </div>
+
+        <div id="explanationArea" class="sub-card hidden" style="margin-top:24px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;">
+            <strong>Share your reasoning</strong>
+            <span id="explanationStatus" class="muted"></span>
+          </div>
+          <textarea id="explanationInput" placeholder="Capture the thinking behind your choice…"></textarea>
+        </div>
+
+        <div id="summaryArea" class="sub-card hidden" style="margin-top:24px;">
+          <strong>Session Summary</strong>
+          <p class="muted" style="margin-top:6px;">See how the community responded.</p>
+          <div id="summaryGrid" class="summary-grid" style="margin-top:16px;"></div>
+          <div id="explanationList" style="margin-top:24px;"></div>
+        </div>
+      </section>
     </div>
 
-    <script>
-      let socket;
-      let studentId = null;
-      let sessionCode = null;
-      let selectedOption = null;
+    <script src="/env.js"></script>
+    <script type="module">
+      import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-      const joinArea = document.getElementById("joinArea");
-      const waitingArea = document.getElementById("waitingArea");
-      const mcqArea = document.getElementById("mcqArea");
-      const questionTitle = document.getElementById("questionTitle");
+      const stageLabel = document.getElementById("stageLabel");
+      const joinButton = document.getElementById("joinButton");
+      const joinCard = document.getElementById("joinCard");
+      const statusCard = document.getElementById("statusCard");
+      const experienceCard = document.getElementById("experienceCard");
+      const joinFeedback = document.getElementById("joinFeedback");
+      const statusBanner = document.getElementById("statusBanner");
+      const sessionCodeDisplay = document.getElementById("sessionCodeDisplay");
+      const rosterList = document.getElementById("rosterList");
+      const rosterEmpty = document.getElementById("rosterEmpty");
+      const questionHeading = document.getElementById("questionHeading");
+      const questionMeta = document.getElementById("questionMeta");
       const optionsContainer = document.getElementById("optionsContainer");
-      const chosenMsg = document.getElementById("chosenMsg");
+      const submitChoice = document.getElementById("submitChoice");
+      const choiceTitle = document.getElementById("choiceTitle");
+      const choiceHint = document.getElementById("choiceHint");
+      const choiceFeedback = document.getElementById("choiceFeedback");
+      const groupArea = document.getElementById("groupArea");
+      const groupDescription = document.getElementById("groupDescription");
+      const groupMembers = document.getElementById("groupMembers");
       const explanationArea = document.getElementById("explanationArea");
-
-      const sessionCodeInput = document.getElementById("sessionCodeInput");
-      const usernameInput = document.getElementById("usernameInput");
-      const joinBtn = document.getElementById("joinBtn");
-      const submitMcqBtn = document.getElementById("submitMcqBtn");
       const explanationInput = document.getElementById("explanationInput");
+      const explanationStatus = document.getElementById("explanationStatus");
+      const summaryArea = document.getElementById("summaryArea");
+      const summaryGrid = document.getElementById("summaryGrid");
+      const explanationList = document.getElementById("explanationList");
+      const responseSummary = document.getElementById("responseSummary");
+      const responseStats = document.getElementById("responseStats");
+      const choiceArea = document.getElementById("choiceArea");
+      const codeInput = document.getElementById("codeInput");
+      const nameInput = document.getElementById("nameInput");
 
-      // If ?code=xxx, pre-fill
-      const urlParams = new URLSearchParams(window.location.search);
-      if (urlParams.has("code")) {
-        sessionCodeInput.value = urlParams.get("code");
+      const state = {
+        supabase: null,
+        channel: null,
+        joined: false,
+        studentId: generateId("student"),
+        name: "",
+        sessionCode: "",
+        stage: "LOBBY",
+        currentQuestion: null,
+        progress: null,
+        roster: [],
+        selectedChoices: new Set(),
+        explanationDraft: "",
+      };
+
+      const config = window.__SUPABASE_CONFIG__ || {};
+      if (!config.projectUrl || !config.anonKey) {
+        displayJoinFeedback("Supabase configuration is missing. Please check the server setup.", true);
+        joinButton.disabled = true;
+      } else {
+        state.supabase = createClient(config.projectUrl, config.anonKey);
       }
 
-      function connectWebSocket() {
-        socket = new WebSocket(
-          window.location.origin.replace(/^http/, "ws")
-        );
+      // Prefill session code if provided via URL
+      const params = new URLSearchParams(window.location.search);
+      if (params.has("code")) {
+        codeInput.value = params.get("code");
+      }
 
-        socket.addEventListener("open", () => {
-          console.log("Student connected via WebSocket");
+      joinButton.addEventListener("click", async () => {
+        if (!state.supabase || state.joined) return;
+
+        const code = codeInput.value.trim().toUpperCase();
+        const name = nameInput.value.trim();
+        if (!code || !name) {
+          displayJoinFeedback("Please provide both the session code and your name.", true);
+          return;
+        }
+
+        joinButton.disabled = true;
+        displayJoinFeedback("Connecting to the live session…", false, false);
+
+        try {
+          state.sessionCode = code;
+          state.name = name;
+          await connectToChannel();
+        } catch (error) {
+          console.error(error);
+          state.sessionCode = "";
+          displayJoinFeedback("We couldn't join that session. Please check the code and try again.", true);
+          joinButton.disabled = false;
+        }
+      });
+
+      submitChoice.addEventListener("click", async () => {
+        if (!state.channel || !state.currentQuestion) return;
+
+        const mode = state.currentQuestion.mode;
+        const choices = Array.from(state.selectedChoices);
+
+        if (!choices.length) {
+          choiceFeedback.textContent = "Select at least one option before submitting.";
+          return;
+        }
+
+        if (mode !== "multi" && choices.length > 1) {
+          choiceFeedback.textContent = "Only one option can be selected for this activity.";
+          return;
+        }
+
+        const response = await state.channel.send({
+          type: "broadcast",
+          event: "CHOICE_SUBMIT",
+          payload: {
+            studentId: state.studentId,
+            name: state.name,
+            choices,
+            submittedAt: new Date().toISOString(),
+          },
         });
 
-        socket.addEventListener("message", (evt) => {
-          const data = JSON.parse(evt.data);
-          switch (data.type) {
-            case "JOINED_SESSION":
-              studentId = data.payload.studentId;
-              sessionCode = data.payload.sessionCode;
-              handleJoined(data.payload.stage);
-              break;
-            case "MCQ_STARTED":
-              showMcq(data.payload.questionText, data.payload.options);
-              break;
-            case "SHOW_EXPLANATION_INPUT":
-              showExplanation();
-              break;
-            case "QUIZ_STOPPED":
-              alert("Quiz has been stopped by the teacher.");
-              socket.close();
-              location.reload();
-              break;
-            case "ERROR":
-              alert(data.payload.message);
-              break;
+        if (response?.status === "ok") {
+          choiceFeedback.textContent = "Your response is saved. You can resubmit if you change your mind before the next stage.";
+        } else {
+          choiceFeedback.textContent = "We couldn't deliver your response. Please try again.";
+        }
+      });
+
+      const debouncedExplanation = debounce(async (value) => {
+        if (!state.channel || state.stage !== "EXPLANATION") return;
+        state.explanationDraft = value;
+
+        await state.channel.send({
+          type: "broadcast",
+          event: "EXPLANATION_UPDATE",
+          payload: {
+            studentId: state.studentId,
+            name: state.name,
+            explanation: value,
+            updatedAt: new Date().toISOString(),
+          },
+        });
+      }, 400);
+
+      explanationInput.addEventListener("input", (event) => {
+        debouncedExplanation(event.target.value);
+      });
+
+      async function connectToChannel() {
+        const channelName = `session-${state.sessionCode}`;
+        state.channel = state.supabase.channel(channelName, {
+          config: {
+            broadcast: { self: false },
+            presence: { key: state.studentId },
+          },
+        });
+
+        state.channel.on("broadcast", { event: "STATE_SYNC" }, ({ payload }) => {
+          applyState(payload);
+        });
+
+        state.channel.on("broadcast", { event: "SESSION_ENDED" }, ({ payload }) => {
+          stageLabel.textContent = "Session Ended";
+          statusBanner.textContent = payload?.message || "The facilitator has closed this session.";
+          statusBanner.classList.add("error");
+          explanationInput.disabled = true;
+          submitChoice.disabled = true;
+        });
+
+        const { error } = await state.channel.subscribe(async (status) => {
+          if (status === "SUBSCRIBED") {
+            await state.channel.track({
+              role: "student",
+              name: state.name,
+              studentId: state.studentId,
+            });
+            onJoinSuccess();
           }
         });
+
+        if (error) {
+          throw error;
+        }
       }
 
-      joinBtn.addEventListener("click", () => {
-        const code = sessionCodeInput.value.trim().toUpperCase();
-        const uname = usernameInput.value.trim();
-        if (!code || !uname) {
-          alert("Please enter both session code and your name.");
+      function onJoinSuccess() {
+        state.joined = true;
+        joinCard.classList.add("hidden");
+        statusCard.classList.remove("hidden");
+        experienceCard.classList.remove("hidden");
+        displayJoinFeedback("Successfully connected!", false, true);
+        joinButton.disabled = false;
+        updateRoster([]);
+      }
+
+      function applyState(payload) {
+        if (!payload) return;
+
+        state.stage = payload.stage || "LOBBY";
+        state.roster = payload.roster || [];
+        state.sessionCode = payload.sessionCode || state.sessionCode;
+        state.currentQuestion = payload.question || null;
+        state.progress = payload.progress || null;
+
+        stageLabel.textContent = stageLabelFor(state.stage, state.currentQuestion?.mode);
+        sessionCodeDisplay.textContent = state.sessionCode || "";
+        updateRoster(state.roster);
+        updateProgressStats(state.progress);
+
+        if (!state.currentQuestion) {
+          questionHeading.textContent = "Awaiting the next question…";
+          questionMeta.textContent = "You'll be notified as soon as the facilitator launches a new prompt.";
+          choiceArea.classList.add("hidden");
+          groupArea.classList.add("hidden");
+          explanationArea.classList.add("hidden");
+          summaryArea.classList.add("hidden");
           return;
         }
-        socket.send(
-          JSON.stringify({
-            type: "STUDENT_JOIN_SESSION",
-            payload: {
-              sessionCode: code,
-              username: uname
-            }
-          })
-        );
-      });
 
-      function handleJoined(stage) {
-        joinArea.style.display = "none";
-        if (stage === "WAITING") {
-          waitingArea.style.display = "block";
-        } else if (stage === "MCQ") {
-          // teacher might already be in MCQ stage
-          waitingArea.style.display = "block"; 
-        } else if (stage === "EXPLANATION") {
-          waitingArea.style.display = "none";
-          mcqArea.style.display = "none";
-          explanationArea.style.display = "block";
+        const q = state.currentQuestion;
+        questionHeading.textContent = q.text || "Untitled question";
+        questionMeta.textContent = `Question ${q.number} · ${modeLabel(q.mode)} · ${q.optionCount} options`;
+
+        if (state.stage === "CHOICE") {
+          renderChoiceInterface(q);
+          groupArea.classList.add("hidden");
+          explanationArea.classList.add("hidden");
+          summaryArea.classList.add("hidden");
+          statusBanner.textContent = "Respond to the question, then await further instructions.";
+        } else if (state.stage === "GROUP") {
+          renderChoiceInterface(q, true);
+          renderGroupArea(q);
+          explanationArea.classList.add("hidden");
+          summaryArea.classList.add("hidden");
+          statusBanner.textContent = "You're grouped based on your selections. Connect with your peers.";
+        } else if (state.stage === "EXPLANATION") {
+          renderGroupArea(q);
+          explanationArea.classList.remove("hidden");
+          renderExplanationState();
+          summaryArea.classList.add("hidden");
+          statusBanner.textContent = "Share the thinking behind your choice.";
+        } else if (state.stage === "SUMMARY") {
+          renderSummary();
+          explanationArea.classList.add("hidden");
+          statusBanner.textContent = "Review the collective outcomes.";
+        } else if (state.stage === "ENDED") {
+          statusBanner.textContent = "The facilitator has closed this session.";
+          statusBanner.classList.add("error");
+          choiceArea.classList.add("hidden");
+          groupArea.classList.add("hidden");
+          explanationArea.classList.add("hidden");
+          summaryArea.classList.add("hidden");
         }
       }
 
-      function showMcq(qText, numOptions) {
-        // Clear old inputs from any previous question
-        explanationInput.value = "";
+      function renderChoiceInterface(question, isReadOnly = false) {
+        choiceArea.classList.remove("hidden");
+        choiceTitle.textContent = question.mode === "multi" ? "Select all options that apply" : "Choose the option that best matches your thinking";
+        choiceHint.textContent = isReadOnly
+          ? "Selections are now closed while we organise groups."
+          : question.mode === "multi"
+          ? "You can select multiple options. Submit to let the facilitator know you're done."
+          : "Select exactly one option. You can resubmit before the next stage.";
 
-        waitingArea.style.display = "none";
-        mcqArea.style.display = "block";
-        explanationArea.style.display = "none";
+        if (isReadOnly) {
+          submitChoice.disabled = true;
+        } else {
+          submitChoice.disabled = false;
+        }
 
-        chosenMsg.style.display = "none";
-        submitMcqBtn.disabled = false;
-        selectedOption = null;
+        const previousSelection = state.progress?.submissions?.[state.studentId]?.choices || [];
+        state.selectedChoices = new Set(previousSelection);
 
-        questionTitle.innerText = qText || "(No question provided)";
         optionsContainer.innerHTML = "";
+        for (let i = 1; i <= question.optionCount; i++) {
+          const optionTile = document.createElement("label");
+          optionTile.className = "option-tile";
 
-        for (let i = 1; i <= numOptions; i++) {
-          const div = document.createElement("div");
-          div.className = "form-check";
+          const control = document.createElement("input");
+          control.type = question.mode === "multi" ? "checkbox" : "radio";
+          control.name = "optionChoice";
+          control.value = String(i);
+          control.disabled = isReadOnly;
 
-          const radio = document.createElement("input");
-          radio.type = "radio";
-          radio.name = "mcqOption";
-          radio.value = i;
-          radio.className = "form-check-input";
-          radio.id = "option" + i;
+          const optionLabel = document.createElement("div");
+          optionLabel.style.fontWeight = "600";
+          optionLabel.textContent = `Option ${i}`;
 
-          radio.addEventListener("change", () => {
-            selectedOption = i;
+          if (state.selectedChoices.has(i)) {
+            optionTile.classList.add("selected");
+            control.checked = true;
+          }
+
+          control.addEventListener("change", () => {
+            if (question.mode === "multi") {
+              if (control.checked) {
+                state.selectedChoices.add(i);
+              } else {
+                state.selectedChoices.delete(i);
+              }
+            } else {
+              state.selectedChoices = new Set([i]);
+              document.querySelectorAll('input[name="optionChoice"]').forEach((input) => {
+                if (input !== control) {
+                  const parent = input.closest(".option-tile");
+                  parent && parent.classList.remove("selected");
+                  input.checked = false;
+                }
+              });
+            }
+
+            if (control.checked) {
+              optionTile.classList.add("selected");
+            } else {
+              optionTile.classList.remove("selected");
+            }
           });
 
-          const label = document.createElement("label");
-          label.className = "form-check-label";
-          label.setAttribute("for", "option" + i);
-          label.innerText = "Option " + i;
-
-          div.appendChild(radio);
-          div.appendChild(label);
-          optionsContainer.appendChild(div);
+          optionTile.appendChild(optionLabel);
+          optionTile.appendChild(control);
+          optionsContainer.appendChild(optionTile);
         }
+
+        choiceFeedback.textContent = previousSelection.length
+          ? `Submitted: ${previousSelection.map((opt) => `Option ${opt}`).join(", ")}`
+          : "";
       }
 
-      submitMcqBtn.addEventListener("click", () => {
-        if (!selectedOption) {
-          alert("Please select an option first!");
+      function renderGroupArea(question) {
+        const mode = question.mode;
+        if (mode !== "multi-tier" || !state.progress?.groups) {
+          groupArea.classList.add("hidden");
           return;
         }
-        socket.send(
-          JSON.stringify({
-            type: "STUDENT_SUBMIT_MCQ",
-            payload: {
-              sessionCode,
-              studentId,
-              answer: selectedOption
-            }
-          })
-        );
-        // lock
-        submitMcqBtn.disabled = true;
-        const radios = optionsContainer.querySelectorAll("input[type=radio]");
-        radios.forEach((r) => (r.disabled = true));
 
-        chosenMsg.innerText = `You chose Option ${selectedOption}. Please wait for the next part.`;
-        chosenMsg.style.display = "block";
-      });
+        groupArea.classList.remove("hidden");
+        const mySubmission = state.progress.submissions?.[state.studentId];
+        const myChoice = mySubmission?.choices?.[0];
+        if (!myChoice) {
+          groupDescription.textContent = "We're arranging groups based on your selections.";
+          groupMembers.innerHTML = "";
+          return;
+        }
 
-      function showExplanation() {
-        // Clear old explanation from previous question
-        explanationInput.value = "";
+        const groupInfo = state.progress.groups.find((group) => group.option === myChoice);
+        if (!groupInfo) {
+          groupDescription.textContent = `We couldn't find your group for Option ${myChoice} yet.`;
+          groupMembers.innerHTML = "";
+          return;
+        }
 
-        mcqArea.style.display = "none";
-        waitingArea.style.display = "none";
-        explanationArea.style.display = "block";
+        groupDescription.textContent = `You're collaborating with peers who chose Option ${myChoice}.`;
+        groupMembers.innerHTML = "";
+
+        if (!groupInfo.members.length) {
+          groupMembers.innerHTML = `<span class="pill">You're the first one in this group!</span>`;
+        } else {
+          groupInfo.members.forEach((member) => {
+            const pill = document.createElement("span");
+            pill.className = "pill";
+            pill.textContent = member.name === state.name ? `${member.name} (You)` : member.name;
+            groupMembers.appendChild(pill);
+          });
+        }
       }
 
-      // Real-time explanation
-      explanationInput.addEventListener("input", (e) => {
-        if (!sessionCode || !studentId) return;
-        const text = e.target.value;
-        socket.send(
-          JSON.stringify({
-            type: "STUDENT_EXPLANATION_UPDATE",
-            payload: {
-              sessionCode,
-              studentId,
-              explanation: text
-            }
-          })
-        );
-      });
+      function renderExplanationState() {
+        const mySubmission = state.progress?.submissions?.[state.studentId];
+        if (!mySubmission) {
+          explanationInput.value = "";
+          explanationStatus.textContent = "Waiting for your selection.";
+          explanationInput.disabled = true;
+          return;
+        }
 
-      window.addEventListener("load", connectWebSocket);
+        explanationInput.disabled = false;
+        explanationInput.value = mySubmission.explanation || state.explanationDraft || "";
+        explanationStatus.textContent = mySubmission.explanation
+          ? "Saved"
+          : "Auto-saves as you type";
+      }
+
+      function renderSummary() {
+        if (!state.progress) return;
+
+        choiceArea.classList.add("hidden");
+        groupArea.classList.add("hidden");
+        summaryArea.classList.remove("hidden");
+
+        summaryGrid.innerHTML = "";
+        const counts = state.progress.counts || [];
+        const total = counts.reduce((sum, c) => sum + c, 0) || 1;
+
+        counts.forEach((count, index) => {
+          const card = document.createElement("div");
+          card.className = "sub-card";
+          const label = document.createElement("div");
+          label.innerHTML = `<strong>Option ${index + 1}</strong>`;
+
+          const value = document.createElement("div");
+          value.style.marginTop = "8px";
+          value.innerHTML = `<span style="font-size:1.8rem;font-weight:700;">${count}</span> <span class="muted">responses</span>`;
+
+          const progressTrack = document.createElement("div");
+          progressTrack.className = "progress-track";
+          const bar = document.createElement("div");
+          bar.className = "progress-bar";
+          bar.style.width = `${Math.round((count / total) * 100)}%`;
+          progressTrack.appendChild(bar);
+
+          card.appendChild(label);
+          card.appendChild(value);
+          card.appendChild(progressTrack);
+          summaryGrid.appendChild(card);
+        });
+
+        explanationList.innerHTML = "";
+        if (state.currentQuestion.mode === "multi-tier") {
+          const explanations = state.progress.explanations || [];
+          if (!explanations.length) {
+            explanationList.innerHTML = `<p class="muted">Explanations will appear here once shared.</p>`;
+          } else {
+            const title = document.createElement("h3");
+            title.textContent = "Shared Reasoning";
+            explanationList.appendChild(title);
+
+            explanations.forEach((item) => {
+              const block = document.createElement("div");
+              block.className = "sub-card";
+              block.style.marginTop = "12px";
+              block.innerHTML = `<strong>${item.name}</strong> · Option ${item.option || "–"}<p class="muted" style="margin-top:8px;white-space:pre-wrap;">${item.explanation}</p>`;
+              explanationList.appendChild(block);
+            });
+          }
+        } else {
+          explanationList.innerHTML = "";
+        }
+      }
+
+      function updateRoster(roster) {
+        rosterList.innerHTML = "";
+        if (!roster || !roster.length) {
+          rosterEmpty.classList.remove("hidden");
+          return;
+        }
+        rosterEmpty.classList.add("hidden");
+
+        roster
+          .filter((member) => member && member.name)
+          .forEach((member) => {
+            const li = document.createElement("li");
+            li.textContent = member.name;
+            rosterList.appendChild(li);
+          });
+      }
+
+      function updateProgressStats(progress) {
+        if (!progress || !state.roster) {
+          responseSummary.classList.add("hidden");
+          return;
+        }
+
+        const totalParticipants = state.roster.length;
+        const submitted = Object.values(progress.submissions || {}).filter((entry) => (entry.choices || []).length).length;
+        responseStats.textContent = `${submitted} of ${totalParticipants} participants have responded.`;
+        responseSummary.classList.remove("hidden");
+      }
+
+      function displayJoinFeedback(message, isError = false, isSuccess = false) {
+        if (!message) {
+          joinFeedback.classList.add("hidden");
+          return;
+        }
+        joinFeedback.textContent = message;
+        joinFeedback.classList.remove("hidden", "error", "success");
+        if (isError) joinFeedback.classList.add("error");
+        if (isSuccess) joinFeedback.classList.add("success");
+      }
+
+      function stageLabelFor(stage, mode) {
+        switch (stage) {
+          case "CHOICE":
+            return mode === "multi-tier" ? "Select" : "Respond";
+          case "GROUP":
+            return "Group";
+          case "EXPLANATION":
+            return "Explain";
+          case "SUMMARY":
+            return "Summary";
+          case "ENDED":
+            return "Session Ended";
+          default:
+            return "Lobby";
+        }
+      }
+
+      function modeLabel(mode) {
+        switch (mode) {
+          case "single":
+            return "Single response";
+          case "multi":
+            return "Multi-response";
+          case "multi-tier":
+            return "Multi-tier";
+          default:
+            return "";
+        }
+      }
+
+      function debounce(fn, delay) {
+        let timeout;
+        return (...args) => {
+          clearTimeout(timeout);
+          timeout = setTimeout(() => fn(...args), delay);
+        };
+      }
+
+      function generateId(prefix) {
+        if (typeof crypto !== "undefined" && crypto.randomUUID) {
+          return `${prefix}-${crypto.randomUUID()}`;
+        }
+        return `${prefix}-${Math.random().toString(16).slice(2)}${Date.now()}`;
+      }
     </script>
   </body>
 </html>
